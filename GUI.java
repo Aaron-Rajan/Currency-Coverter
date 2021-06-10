@@ -4,6 +4,8 @@ import java.awt.event.*;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.*;
+import java.net.*;
 import java.util.ArrayList;
 
 import org.json.simple.JSONArray;
@@ -11,10 +13,15 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 public class GUI implements ActionListener {
-    public static ArrayList<String> arrayList = new ArrayList<>();
-    public static String[] curr_list;
-    public static JComboBox<String> from_curr;
-    public static JComboBox<String> to_curr;
+    private static ArrayList<String> arrayList = new ArrayList<>();
+    private static String[] curr_list;
+    private static JComboBox<String> from_curr;
+    private static JComboBox<String> to_curr;
+    private static JTextField input_curr;
+    private static JLabel output_curr;
+    private static String curr_1;
+    private static String curr_2;
+    private static String input_value;
 
     public GUI() {
         JFrame frame = new JFrame();
@@ -32,8 +39,12 @@ public class GUI implements ActionListener {
         title_panel.add(title);
         frame.add(title_panel, BorderLayout.NORTH);
 
+        JPanel panel_1 = new JPanel();
+        panel_1.setLayout(new BorderLayout());
+
+
         JPanel main_panel = new JPanel();
-        main_panel.setPreferredSize(new Dimension(100, 300));
+        main_panel.setPreferredSize(new Dimension(100, 60));
         main_panel.setLayout(new FlowLayout(FlowLayout.CENTER, 30, 10));
         main_panel.setBackground(Color.lightGray);
         JLabel input_currency_label = new JLabel("From:");
@@ -80,8 +91,25 @@ public class GUI implements ActionListener {
         main_panel.add(output_currency_label);
         main_panel.add(to_curr);
 
-        frame.add(main_panel,BorderLayout.CENTER);
+        JPanel curr_panel = new JPanel();
+        curr_panel.setBackground(Color.lightGray);
+        curr_panel.setLayout(new FlowLayout(FlowLayout.CENTER, 70, 0));
+        input_curr = new JTextField();
+        input_curr.setPreferredSize(new Dimension(60, 25));
+        input_curr.addActionListener(this);
+        output_curr = new JLabel("");
+        output_curr.setPreferredSize(new Dimension(80, 25));
+        output_curr.setForeground(Color.black);
+        output_curr.setFont(new Font("", Font.PLAIN, 16));
 
+
+        curr_panel.add(input_curr);
+        curr_panel.add(output_curr);
+
+
+        panel_1.add(curr_panel, BorderLayout.CENTER);
+        panel_1.add(main_panel, BorderLayout.NORTH);
+        frame.add(panel_1,BorderLayout.CENTER);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
@@ -100,15 +128,58 @@ public class GUI implements ActionListener {
         return b;
 
     }
+    public static double get_rate(String curr_1, String curr_2) {
+        double rate = 0;
+        try {
+            URL url = new URL("https://free.currconv.com/api/v7/convert?q=" + curr_1 + "_" + curr_2 + "&compact=ultra&apiKey=db509adad901627f19a3");
+            String readline = null;
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("USD_PHP", "2");
+            int response_code = con.getResponseCode();
+
+            if (response_code == HttpURLConnection.HTTP_OK) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                StringBuffer response = new  StringBuffer();
+                while ((readline = br.readLine()) != null) {
+                    response.append(readline);
+                }
+                br.close();
+                response.replace(0,11,"");
+                response.replace(response.length() - 1,response.length(),"");
+                rate = Double.parseDouble(response.toString());
+            }
+            return rate;
+        }
+        catch (Exception e) {
+            return rate;
+        }
+    }
+    public static void convert(String input_value, String curr_1, String curr_2) {
+        try {
+            double rate = get_rate(curr_1, curr_2);
+            double output_value = rate * Double.parseDouble(input_value);
+            String output_value_string = "" + output_value + "";
+            output_curr.setText(output_value_string);
+        }
+        catch (Exception e) {
+        
+        }
+    }
+
     public void actionPerformed(ActionEvent e) {
         if (e.getActionCommand().equals("comboBoxChanged") && verification((String) from_curr.getSelectedItem()) && verification((String) to_curr.getSelectedItem())) {
             if(e.getSource() == from_curr) {
-                String curr_1 = (String) from_curr.getSelectedItem();
-                System.out.println(curr_1);
+                curr_1 = (String) from_curr.getSelectedItem();
             }
             else if (e.getSource() == to_curr) {
-                String curr_2 = (String) to_curr.getSelectedItem();
-                System.out.println(curr_2);
+                curr_2 = (String) to_curr.getSelectedItem();
+            }
+        }
+        if (verification((String) from_curr.getSelectedItem()) && verification((String) to_curr.getSelectedItem())) {
+            input_value = input_curr.getText();
+            if (!input_value.equals(null)) {
+                convert(input_value, curr_1, curr_2);
             }
         }
     }
