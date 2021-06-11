@@ -22,10 +22,15 @@ public class GUI implements ActionListener {
     private static String curr_1;
     private static String curr_2;
     private static String input_value;
-
+    private static double rate;
+    public static ArrayList<String> arrayList_2 = new ArrayList<>();
+    private static String name_1;
+    private static String name_2;
+    private static JLabel curr_line;
+    
     public GUI() {
         JFrame frame = new JFrame();
-        frame.setSize(500, 400);
+        frame.setSize(500, 355);
         frame.setLayout(new BorderLayout());
         frame.setTitle("Currency Converter");
 
@@ -93,23 +98,31 @@ public class GUI implements ActionListener {
 
         JPanel curr_panel = new JPanel();
         curr_panel.setBackground(Color.lightGray);
-        curr_panel.setLayout(new FlowLayout(FlowLayout.CENTER, 70, 0));
+        curr_panel.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 0));
         input_curr = new JTextField();
-        input_curr.setPreferredSize(new Dimension(60, 25));
+        input_curr.setFont(new Font("", Font.BOLD, 18));
+        input_curr.setPreferredSize(new Dimension(110, 40));
         input_curr.addActionListener(this);
         output_curr = new JLabel("");
-        output_curr.setPreferredSize(new Dimension(80, 25));
+        output_curr.setPreferredSize(new Dimension(120, 25));
         output_curr.setForeground(Color.black);
-        output_curr.setFont(new Font("", Font.PLAIN, 16));
+        output_curr.setFont(new Font("", Font.BOLD, 18));
 
 
         curr_panel.add(input_curr);
         curr_panel.add(output_curr);
 
+        curr_line = new JLabel("");
+        curr_line.setPreferredSize(new Dimension(155, 160));
+        curr_line.setForeground(Color.black);
+        curr_line.setFont(new Font("", Font.BOLD, 16));
+        curr_panel.add(curr_line);
+
 
         panel_1.add(curr_panel, BorderLayout.CENTER);
         panel_1.add(main_panel, BorderLayout.NORTH);
-        frame.add(panel_1,BorderLayout.CENTER);
+        
+        frame.add(panel_1, BorderLayout.CENTER);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
@@ -117,6 +130,9 @@ public class GUI implements ActionListener {
     public static void parseEmpObj(JSONObject emp) {
         String currency = (String) emp.get("code");
         arrayList.add(currency);
+        String name = (String) emp.get("name");
+        arrayList_2.add(name);
+
     }
     public static boolean verification(String s) {
         boolean b = false;
@@ -157,13 +173,33 @@ public class GUI implements ActionListener {
     }
     public static void convert(String input_value, String curr_1, String curr_2) {
         try {
-            double rate = get_rate(curr_1, curr_2);
+            if (Double.parseDouble(input_value) == 0) {
+                output_curr.setText("");
+            }
+            rate = get_rate(curr_1, curr_2);
             double output_value = rate * Double.parseDouble(input_value);
-            String output_value_string = "" + output_value + "";
-            output_curr.setText(output_value_string);
+            double output_value_rnd = Math.round(output_value*1000.0)/1000.0;
+            String output_value_string = "" + output_value_rnd + "";
+
+            if (output_value != 0) {
+                output_curr.setText("<html><div style='text-align: center;'>" + output_value_string + "</div><html>");
+            }
         }
         catch (Exception e) {
-        
+        }
+    }
+    public static void convert_line() {
+        try {
+            if ((rate != 0) && (!name_2.equals(null))) {
+                String text = "<html>1 " + name_1 + " equals " + rate + " " + name_2 +"<html>";
+                curr_line.setText("<html><div style='text-align: center;'>" + text + "</div><html>");
+            }
+
+            if (Double.parseDouble(input_value) == 0) {
+                curr_line.setText("");
+            }
+        }
+        catch (Exception e) {
         }
     }
 
@@ -171,15 +207,20 @@ public class GUI implements ActionListener {
         if (e.getActionCommand().equals("comboBoxChanged") && verification((String) from_curr.getSelectedItem()) && verification((String) to_curr.getSelectedItem())) {
             if(e.getSource() == from_curr) {
                 curr_1 = (String) from_curr.getSelectedItem();
+                int name_1_index = from_curr.getSelectedIndex();
+                name_1 = arrayList_2.get(name_1_index);
             }
             else if (e.getSource() == to_curr) {
                 curr_2 = (String) to_curr.getSelectedItem();
+                int name_2_index = to_curr.getSelectedIndex();
+                name_2 = arrayList_2.get(name_2_index);
             }
         }
         if (verification((String) from_curr.getSelectedItem()) && verification((String) to_curr.getSelectedItem())) {
             input_value = input_curr.getText();
             if (!input_value.equals(null)) {
                 convert(input_value, curr_1, curr_2);
+                convert_line();
             }
         }
     }
