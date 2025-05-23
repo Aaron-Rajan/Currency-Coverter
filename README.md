@@ -1,4 +1,4 @@
-# Currency Converter
+# Currency Converter 💸
 
 A desktop application that allows users to convert currencies using a graphical user interface (GUI) built with Java Swing. The application integrates with an external API to fetch real-time exchange rates and uses a local JSON file for currency data.
 
